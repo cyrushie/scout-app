@@ -16,7 +16,7 @@ const DEFAULT_API_URL = "http://localhost:3001"
 const DEFAULT_TENANT_ID = "scout-direct"
 
 function getApiBaseUrl() {
-  return process.env.SCOUT_API_URL ?? process.env.NEXT_PUBLIC_SCOUT_API_URL ?? DEFAULT_API_URL
+  return (process.env.SCOUT_API_URL ?? process.env.NEXT_PUBLIC_SCOUT_API_URL ?? DEFAULT_API_URL).replace(/\/+$/, "")
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {

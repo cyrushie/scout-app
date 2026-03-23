@@ -44,6 +44,10 @@ declare global {
 const DEFAULT_API_URL = "http://localhost:3001";
 const DEFAULT_TITLE = "Scout";
 const DEFAULT_ACCENT = "#111111";
+function normalizeApiBaseUrl(value: string) {
+  return value.replace(/\/+$/, "");
+}
+
 const HIDDEN_ASSESSMENT_STATES = new Set([
   "intake",
   "intake_issue",
@@ -607,7 +611,7 @@ async function request<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
-  const response = await fetch(`${apiUrl}${path}`, {
+  const response = await fetch(`${normalizeApiBaseUrl(apiUrl)}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",

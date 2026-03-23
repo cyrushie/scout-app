@@ -31,7 +31,7 @@ export interface LeadSubmissionInput {
 }
 
 function getApiBaseUrl() {
-  return process.env.NEXT_PUBLIC_SCOUT_API_URL ?? DEFAULT_API_URL
+  return (process.env.NEXT_PUBLIC_SCOUT_API_URL ?? DEFAULT_API_URL).replace(/\/+$/, "")
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
