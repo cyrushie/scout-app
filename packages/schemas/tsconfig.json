@@ -4,6 +4,7 @@
     "allowJs": false,
     "declaration": true,
     "emitDeclarationOnly": false,
+    "incremental": false,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmit": false,
