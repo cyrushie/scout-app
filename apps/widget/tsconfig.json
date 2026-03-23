@@ -8,7 +8,11 @@
     "strict": true,
     "declaration": true,
     "skipLibCheck": true,
-    "lib": ["DOM", "ES2022"]
+    "lib": ["DOM", "ES2022"],
+    "baseUrl": ".",
+    "paths": {
+      "@scout/types": ["../../packages/types/src"]
+    }
   },
   "include": ["src/**/*.ts"]
 }
