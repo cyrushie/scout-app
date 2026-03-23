@@ -1,4 +1,5 @@
 import process from "node:process";
+import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AiProvider } from "@scout/types";
@@ -6,7 +7,11 @@ import type { AiProvider } from "@scout/types";
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const apiRoot = resolve(currentDir, "..", "..");
 
-process.loadEnvFile?.(resolve(apiRoot, ".env"));
+const localEnvPath = resolve(apiRoot, ".env");
+
+if (existsSync(localEnvPath)) {
+  process.loadEnvFile?.(localEnvPath);
+}
 
 function getRequiredEnv(name: string) {
   const value = process.env[name];
