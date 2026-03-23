@@ -1,0 +1,25 @@
+{
+  "name": "@scout/widget",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/embed.js",
+  "types": "./dist/embed.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/embed.d.ts",
+      "import": "./dist/embed.js"
+    }
+  },
+  "scripts": {
+    "dev": "tsc -p tsconfig.json --watch",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@scout/types": "file:../../packages/types"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "5.7.3"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "scout-platform",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build:shared": "npm run build --workspace @scout/types && npm run build --workspace @scout/schemas",
+    "dev:web": "npm run dev --workspace @scout/web",
+    "dev:dashboard": "npm run dev --workspace @scout/dashboard",
+    "dev:api": "npm run dev --workspace @scout/api",
+    "dev:widget": "npm run dev --workspace @scout/widget",
+    "seed:demo": "node scripts/seed-dashboard-demo.mjs",
+    "seed:demo:reset": "node scripts/seed-dashboard-demo.mjs --reset",
+    "build:web": "npm run build --workspace @scout/web",
+    "build:dashboard": "npm run build --workspace @scout/dashboard",
+    "build:api": "npm run build --workspace @scout/api",
+    "build:widget": "npm run build --workspace @scout/widget",
+    "lint:web": "npm run lint --workspace @scout/web",
+    "lint:dashboard": "npm run lint --workspace @scout/dashboard"
+  }
+}

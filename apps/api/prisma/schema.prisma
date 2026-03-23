@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum SeverityLevel {
+  low
+  medium
+  high
+  urgent
+}
+
+enum ConversationStatus {
+  intake
+  intake_issue
+  intake_location
+  intake_name_optional
+  clarification
+  assessment
+  recommendation
+  summary_offer
+  contact_capture
+  handoff_offer
+  scheduling_capture
+  lead_capture
+  complete
+}
+
+enum RecommendedAction {
+  monitor
+  home_action
+  collect_more_context
+  professional_help
+  urgent_professional_help
+}
+
+enum LeadStatus {
+  new
+  review
+  contacted
+  closed
+}
+
+enum MessageRole {
+  system
+  assistant
+  user
+}
+
+enum SourceChannel {
+  web
+  widget
+  dashboard
+}
+
+enum ContactMethod {
+  email
+  phone
+}
+
+enum AiProvider {
+  groq
+  gemini
+  zai
+  openrouter
+}
+
+model Tenant {
+  id             String         @id
+  companyName    String
+  brandName      String
+  allowedDomains String[]
+  serviceAreas   String[]
+  supportEmail   String
+  widgetEnabled  Boolean        @default(true)
+  assistantVoice String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  conversations  Conversation[]
+  leads          Lead[]
+}
+
+model ScoutRuntimeConfig {
+  id        String     @id
+  provider  AiProvider
+  model     String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Conversation {
+  id            String              @id @default(cuid())
+  tenantId      String
+  source        SourceChannel
+  locale        String              @default("en-US")
+  status        ConversationStatus  @default(intake)
+  aiProviderUsed AiProvider?
+  aiModelUsed   String?
+  preferredName String?
+  city          String?
+  region        String?
+  summaryRequested Boolean          @default(false)
+  summaryEmail   String?
+  summaryPhone   String?
+  preferredContactMethod ContactMethod?
+  availabilityNotes String?
+  severity      SeverityLevel       @default(low)
+  suspectedPest String?
+  urgencyScore  Int                 @default(0)
+  leadOffered   Boolean             @default(false)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  tenant        Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  messages      ConversationMessage[]
+  lead          Lead?
+
+  @@index([tenantId, createdAt])
+}
+
+model ConversationMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  content        String
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model Lead {
+  id            String        @id @default(cuid())
+  tenantId      String
+  conversationId String       @unique
+  name          String
+  email         String?
+  phone         String?
+  preferredContactMethod ContactMethod?
+  availabilityNotes String?
+  city          String?
+  region        String?
+  suspectedPest String?
+  severity      SeverityLevel
+  urgencyScore  Int
+  summary       String
+  status        LeadStatus    @default(new)
+  createdAt     DateTime      @default(now())
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  conversation  Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status, createdAt])
+}
