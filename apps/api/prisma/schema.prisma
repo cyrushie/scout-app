@@ -79,6 +79,7 @@ model Tenant {
   supportEmail   String
   widgetEnabled  Boolean        @default(true)
   assistantVoice String
+  scoutInstructions String      @default("")
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   conversations  Conversation[]

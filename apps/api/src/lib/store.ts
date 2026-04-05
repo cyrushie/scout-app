@@ -2,6 +2,7 @@ import type {
   AiRuntimeConfig,
   ConversationAnalytics,
   AnalyticsOverview,
+  CreateTenantInput,
   ConversationDetail,
   ConversationFilters,
   ConversationListItem,
@@ -13,6 +14,7 @@ import type {
   LeadQueueItem,
   LeadRecord,
   TenantConfig,
+  UpdateTenantInput,
 } from "@scout/types"
 import { prisma } from "./prisma.js"
 import { env } from "./env.js"
@@ -27,6 +29,7 @@ const seededTenants: TenantConfig[] = [
     supportEmail: "support@scoutai.app",
     widgetEnabled: true,
     assistantVoice: "Calm, practical, and non-alarmist.",
+    scoutInstructions: "",
   },
   {
     id: "sunrise-pest",
@@ -37,6 +40,7 @@ const seededTenants: TenantConfig[] = [
     supportEmail: "ops@sunrisepest.example",
     widgetEnabled: true,
     assistantVoice: "Helpful, reassuring, and concise.",
+    scoutInstructions: "",
   },
 ]
 
@@ -55,6 +59,7 @@ function toTenantConfig(tenant: {
   supportEmail: string
   widgetEnabled: boolean
   assistantVoice: string
+  scoutInstructions: string
 }): TenantConfig {
   return {
     id: tenant.id,
@@ -65,6 +70,7 @@ function toTenantConfig(tenant: {
     supportEmail: tenant.supportEmail,
     widgetEnabled: tenant.widgetEnabled,
     assistantVoice: tenant.assistantVoice,
+    scoutInstructions: tenant.scoutInstructions,
   }
 }
 
@@ -273,15 +279,7 @@ export async function ensureSeedData() {
       prisma.tenant.upsert({
         where: { id: tenant.id },
         create: tenant,
-        update: {
-          companyName: tenant.companyName,
-          brandName: tenant.brandName,
-          allowedDomains: tenant.allowedDomains,
-          serviceAreas: tenant.serviceAreas,
-          supportEmail: tenant.supportEmail,
-          widgetEnabled: tenant.widgetEnabled,
-          assistantVoice: tenant.assistantVoice,
-        },
+        update: {},
       }),
     ),
   )
@@ -313,6 +311,35 @@ export async function getTenantOrThrow(tenantId: string): Promise<TenantConfig> 
   if (!tenant) {
     throw new Error(`Unknown tenant: ${tenantId}`)
   }
+
+  return toTenantConfig(tenant)
+}
+
+export async function createTenant(input: CreateTenantInput): Promise<TenantConfig> {
+  const existingTenant = await prisma.tenant.findUnique({
+    where: { id: input.id },
+    select: { id: true },
+  })
+
+  if (existingTenant) {
+    throw new Error(`Tenant id already exists: ${input.id}`)
+  }
+
+  const tenant = await prisma.tenant.create({
+    data: input,
+  })
+
+  return toTenantConfig(tenant)
+}
+
+export async function updateTenant(
+  tenantId: string,
+  input: UpdateTenantInput,
+): Promise<TenantConfig> {
+  const tenant = await prisma.tenant.update({
+    where: { id: tenantId },
+    data: input,
+  })
 
   return toTenantConfig(tenant)
 }

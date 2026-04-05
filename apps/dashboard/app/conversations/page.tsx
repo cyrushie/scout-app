@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { getConversations } from "@/lib/scout-api"
 import { requireDashboardSession } from "@/lib/auth"
+import { getDashboardTenantId } from "@/lib/tenant-selection"
 import type {
   ConversationFilters,
   ConversationStatus,
@@ -54,9 +55,11 @@ export default async function ConversationsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   await requireDashboardSession()
+  const tenantId = await getDashboardTenantId()
 
   const params = await searchParams
   const filters: ConversationFilters = {
+    tenantId,
     search: typeof params.search === "string" ? params.search : undefined,
     status: typeof params.status === "string" ? (params.status as ConversationStatus) : undefined,
     severity:
@@ -85,25 +88,8 @@ export default async function ConversationsPage({
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Link
-                href="/analytics"
-                className="rounded-full border border-[#d7e0e3] bg-white px-4 py-2 text-sm font-medium text-[#132226] transition hover:border-[#b9c8cc]"
-              >
-                Open analytics
-              </Link>
-              <Link
-                href="/"
-                className="rounded-full border border-[#d7e0e3] bg-white px-4 py-2 text-sm font-medium text-[#132226] transition hover:border-[#b9c8cc]"
-              >
-                Back to overview
-              </Link>
-              <Link
-                href="/leads"
-                className="rounded-full border border-[#d7e0e3] bg-white px-4 py-2 text-sm font-medium text-[#132226] transition hover:border-[#b9c8cc]"
-              >
-                Open lead ops
-              </Link>
+            <div className="rounded-full border border-[#d7e0e3] bg-white px-4 py-2 text-sm font-medium text-[#5f7176]">
+              Browse funnel state and transcript history
             </div>
           </div>
         </section>

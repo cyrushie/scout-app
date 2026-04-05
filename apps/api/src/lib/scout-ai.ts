@@ -163,6 +163,8 @@ function buildGuidancePrompt(input: {
   return [
     `Tenant brand: ${input.tenant.brandName}.`,
     `Service areas: ${input.tenant.serviceAreas.join(", ")}.`,
+    `Tenant assistant voice: ${input.tenant.assistantVoice}.`,
+    `Tenant-specific instructions: ${input.tenant.scoutInstructions || "none"}.`,
     `User message count: ${userMessageCount}.`,
     `Latest user message: ${lastUserMessage || "n/a"}.`,
     `Rule-based baseline pest signal: ${baselinePest}.`,
@@ -201,6 +203,8 @@ function buildGuidancePrompt(input: {
     "- If the user gives information out of order, use it and do not ask for it again.",
     "- If the user says hello or changes the subject briefly, respond naturally and gently steer back.",
     "- Avoid sounding salesy, dramatic, or overly certain.",
+    "- Follow the tenant assistant voice while staying calm, clear, and practical.",
+    "- Follow the tenant-specific instructions when they are relevant to this conversation.",
     "- Do not mention internal scoring, pricing, tenants, or lead resale.",
     "- If recommending professional help, explain why in plain language and invite the user to continue if they want help.",
     "",
@@ -563,6 +567,9 @@ function buildGuidedObjectivePrompt(input: {
 
   return [
     `Tenant brand: ${input.tenant.brandName}.`,
+    `Service areas: ${input.tenant.serviceAreas.join(", ")}.`,
+    `Tenant assistant voice: ${input.tenant.assistantVoice}.`,
+    `Tenant-specific instructions: ${input.tenant.scoutInstructions || "none"}.`,
     `Current conversation state: ${input.conversation.status}.`,
     `Next state after this reply: ${input.nextState}.`,
     `Turn objective: ${input.objective}.`,
@@ -586,7 +593,8 @@ function buildGuidedObjectivePrompt(input: {
     "",
     "Write one short assistant reply only.",
     "Rules:",
-    "- Sound like a calm, capable pest guidance assistant.",
+    "- Follow the tenant assistant voice while staying calm, capable, and practical.",
+    "- Follow the tenant-specific instructions when they are relevant to this conversation.",
     "- Acknowledge the user's latest message naturally.",
     "- If they asked a short side question, answer it briefly before steering back.",
     "- Do not sound like a form or repeat the same canned opener.",

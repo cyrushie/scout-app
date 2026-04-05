@@ -12,6 +12,7 @@ import {
 } from "@/lib/runtime-catalog"
 import { getAiRuntimeConfig, getAnalyticsOverview } from "@/lib/scout-api"
 import { requireDashboardSession } from "@/lib/auth"
+import { getDashboardTenantId } from "@/lib/tenant-selection"
 import type { AiProvider, AnalyticsOverview, DashboardMetric, LeadStatus, SeverityLevel } from "@scout/types"
 import { AlertTriangle, ArrowUpRight, CircleDot, Users } from "lucide-react"
 
@@ -72,12 +73,16 @@ function EmptyState({ message }: { message: string }) {
 
 export default async function DashboardPage() {
   const session = await requireDashboardSession()
+  const tenantId = await getDashboardTenantId()
   let overview: AnalyticsOverview | null = null
   let aiRuntime: { provider: AiProvider; model: string } | null = null
   let loadError: string | null = null
 
   try {
-    ;[overview, aiRuntime] = await Promise.all([getAnalyticsOverview(), getAiRuntimeConfig()])
+    ;[overview, aiRuntime] = await Promise.all([
+      getAnalyticsOverview(tenantId),
+      getAiRuntimeConfig(),
+    ])
   } catch (error) {
     loadError = "Scout dashboard could not reach the API. Make sure the API is running and the SCOUT_API_URL env var is correct."
   }
@@ -110,36 +115,8 @@ export default async function DashboardPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Link
-                href="/analytics"
-                className="rounded-full border border-[#d7e0e3] bg-white px-4 py-2 text-sm font-medium text-[#132226] transition hover:border-[#b9c8cc]"
-              >
-                Open analytics
-              </Link>
-              <Link
-                href="/conversations"
-                className="rounded-full border border-[#d7e0e3] bg-white px-4 py-2 text-sm font-medium text-[#132226] transition hover:border-[#b9c8cc]"
-              >
-                Open conversations
-              </Link>
-              <Link
-                href="/leads"
-                className="rounded-full border border-[#d7e0e3] bg-white px-4 py-2 text-sm font-medium text-[#132226] transition hover:border-[#b9c8cc]"
-              >
-                Open lead ops
-              </Link>
-              <div className="rounded-full bg-[#ecf7f2] px-4 py-2 text-sm font-medium text-[#1d8f6a]">
-                Signed in as {session.username}
-              </div>
-              <form action="/logout" method="post">
-                <button
-                  type="submit"
-                  className="rounded-full border border-[#d7e0e3] bg-white px-4 py-2 text-sm font-medium text-[#132226] transition hover:border-[#b9c8cc]"
-                >
-                  Sign out
-                </button>
-              </form>
+            <div className="rounded-full bg-[#ecf7f2] px-4 py-2 text-sm font-medium text-[#1d8f6a]">
+              Signed in as {session.username}
             </div>
           </div>
         </section>

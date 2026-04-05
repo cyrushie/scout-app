@@ -40,7 +40,25 @@ export interface TenantConfig {
   supportEmail: string
   widgetEnabled: boolean
   assistantVoice: string
+  scoutInstructions: string
 }
+
+export interface TenantSettingsInput {
+  companyName: string
+  brandName: string
+  allowedDomains: string[]
+  serviceAreas: string[]
+  supportEmail: string
+  widgetEnabled: boolean
+  assistantVoice: string
+  scoutInstructions: string
+}
+
+export interface CreateTenantInput extends TenantSettingsInput {
+  id: string
+}
+
+export type UpdateTenantInput = TenantSettingsInput
 
 export interface AiRuntimeConfig {
   provider: AiProvider

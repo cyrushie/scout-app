@@ -5,11 +5,14 @@ import type {
   ConversationDetail,
   ConversationFilters,
   ConversationListItem,
+  CreateTenantInput,
   LeadDetail,
   LeadFilters,
   LeadRecord,
   LeadStatus,
   SeverityLevel,
+  TenantConfig,
+  UpdateTenantInput,
 } from "@scout/types"
 
 const DEFAULT_API_URL = "http://localhost:3001"
@@ -30,10 +33,56 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   })
 
   if (!response.ok) {
-    throw new Error(`Scout API request failed: ${response.status}`)
+    let message = `Scout API request failed: ${response.status}`
+    const contentType = response.headers.get("content-type") ?? ""
+
+    if (contentType.includes("application/json")) {
+      try {
+        const payload = (await response.json()) as {
+          error?: string
+          message?: string
+        }
+        message = payload.error ?? payload.message ?? message
+      } catch {
+        // Keep the status-based fallback if the body is unreadable.
+      }
+    } else {
+      const text = (await response.text()).trim()
+
+      if (text) {
+        message = text
+      }
+    }
+
+    throw new Error(message)
   }
 
   return response.json()
+}
+
+export async function getTenants() {
+  return request<TenantConfig[]>("/v1/tenants")
+}
+
+export async function getTenant(tenantId: string) {
+  return request<TenantConfig>(`/v1/tenants/${tenantId}`)
+}
+
+export async function createTenant(input: CreateTenantInput) {
+  return request<TenantConfig>("/v1/tenants", {
+    method: "POST",
+    body: JSON.stringify(input),
+  })
+}
+
+export async function updateTenant(input: {
+  tenantId: string
+  data: UpdateTenantInput
+}) {
+  return request<TenantConfig>(`/v1/tenants/${input.tenantId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input.data),
+  })
 }
 
 export async function getAnalyticsOverview(tenantId = DEFAULT_TENANT_ID) {

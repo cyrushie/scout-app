@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { getLeads } from "@/lib/scout-api"
 import { requireDashboardSession } from "@/lib/auth"
+import { getDashboardTenantId } from "@/lib/tenant-selection"
 import type { LeadFilters, LeadStatus, SeverityLevel } from "@scout/types"
 
 const statusOptions: Array<LeadStatus | ""> = ["", "new", "review", "contacted", "closed"]
@@ -27,9 +28,11 @@ export default async function LeadsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   await requireDashboardSession()
+  const tenantId = await getDashboardTenantId()
 
   const params = await searchParams
   const filters: LeadFilters = {
+    tenantId,
     search: typeof params.search === "string" ? params.search : undefined,
     status: typeof params.status === "string" ? (params.status as LeadStatus) : undefined,
     severity:
@@ -53,13 +56,8 @@ export default async function LeadsPage({
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Link
-                href="/"
-                className="rounded-full border border-[#d7e0e3] bg-white px-4 py-2 text-sm font-medium text-[#132226] transition hover:border-[#b9c8cc]"
-              >
-                Back to overview
-              </Link>
+            <div className="rounded-full border border-[#d7e0e3] bg-white px-4 py-2 text-sm font-medium text-[#5f7176]">
+              Work the queue from here
             </div>
           </div>
         </section>

@@ -38,6 +38,29 @@ export const tenantQuerySchema = z.object({
   tenantId: z.string().min(1).optional(),
 })
 
+const tenantIdSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Tenant ids must be lowercase and use hyphens only.")
+
+const tenantSettingsSchema = z.object({
+  companyName: z.string().trim().min(1),
+  brandName: z.string().trim().min(1),
+  allowedDomains: z.array(z.string().trim().min(1)),
+  serviceAreas: z.array(z.string().trim().min(1)),
+  supportEmail: z.string().trim().email(),
+  widgetEnabled: z.boolean(),
+  assistantVoice: z.string().trim().min(1),
+  scoutInstructions: z.string().trim(),
+})
+
+export const createTenantSchema = tenantSettingsSchema.extend({
+  id: tenantIdSchema,
+})
+
+export const updateTenantSchema = tenantSettingsSchema
+
 export const leadQuerySchema = z.object({
   tenantId: z.string().min(1).optional(),
   status: leadStatusEnum.optional(),
@@ -97,4 +120,6 @@ export const updateAiRuntimeSchema = z.object({
 export type CreateConversationInput = z.infer<typeof createConversationSchema>
 export type CreateMessageInput = z.infer<typeof createMessageSchema>
 export type CreateLeadInput = z.infer<typeof createLeadSchema>
+export type CreateTenantInput = z.infer<typeof createTenantSchema>
 export type UpdateAiRuntimeInput = z.infer<typeof updateAiRuntimeSchema>
+export type UpdateTenantInput = z.infer<typeof updateTenantSchema>

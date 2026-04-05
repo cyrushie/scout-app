@@ -620,10 +620,39 @@ async function request<T>(
   });
 
   if (!response.ok) {
-    throw new Error(`Scout widget request failed: ${response.status}`);
+    let message = `Scout widget request failed: ${response.status}`;
+    const contentType = response.headers.get("content-type") ?? "";
+
+    if (contentType.includes("application/json")) {
+      try {
+        const payload = (await response.json()) as {
+          error?: string;
+          message?: string;
+        };
+        message = payload.error ?? payload.message ?? message;
+      } catch {
+        // Keep the status-based fallback when the error body is unreadable.
+      }
+    } else {
+      const text = (await response.text()).trim();
+
+      if (text) {
+        message = text;
+      }
+    }
+
+    throw new Error(message);
   }
 
   return response.json() as Promise<T>;
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallback;
 }
 
 class ScoutWidgetElement extends HTMLElement {
@@ -775,8 +804,8 @@ class ScoutWidgetElement extends HTMLElement {
         region: response.conversation.region ?? this.leadState.region,
       };
       this.booted = true;
-    } catch {
-      this.error = "Scout could not start right now.";
+    } catch (error) {
+      this.error = getErrorMessage(error, "Scout could not start right now.");
     } finally {
       this.booting = false;
       this.render();
@@ -837,8 +866,11 @@ class ScoutWidgetElement extends HTMLElement {
           content: response.assistantMessage,
         },
       ];
-    } catch {
-      this.error = "Scout could not process that message. Please try again.";
+    } catch (error) {
+      this.error = getErrorMessage(
+        error,
+        "Scout could not process that message. Please try again.",
+      );
     } finally {
       this.sending = false;
       this.render();
@@ -882,8 +914,11 @@ class ScoutWidgetElement extends HTMLElement {
           summary: this.summary,
         }),
       });
-    } catch {
-      this.error = "Scout could not save your details right now.";
+    } catch (error) {
+      this.error = getErrorMessage(
+        error,
+        "Scout could not save your details right now.",
+      );
     } finally {
       this.submittingLead = false;
       this.render();
@@ -1106,6 +1141,18 @@ class ScoutWidgetElement extends HTMLElement {
   }
 
   private render() {
+    const activeElement = this.root.activeElement;
+    const shouldRestoreComposerFocus =
+      activeElement instanceof HTMLTextAreaElement &&
+      activeElement.dataset.role === "composer";
+    const composerSelection = shouldRestoreComposerFocus
+      ? {
+          start: activeElement.selectionStart ?? activeElement.value.length,
+          end: activeElement.selectionEnd ?? activeElement.value.length,
+          direction: activeElement.selectionDirection ?? "none",
+        }
+      : null;
+
     const body = this.open
       ? `
         <section class="panel">
@@ -1162,6 +1209,23 @@ class ScoutWidgetElement extends HTMLElement {
 
     this.root.innerHTML = shell;
     this.bindEvents();
+
+    if (shouldRestoreComposerFocus) {
+      const composer = this.root.querySelector<HTMLTextAreaElement>(
+        "[data-role='composer']",
+      );
+
+      if (composer) {
+        composer.focus();
+
+        if (composerSelection) {
+          const start = Math.min(composerSelection.start, composer.value.length);
+          const end = Math.min(composerSelection.end, composer.value.length);
+
+          composer.setSelectionRange(start, end, composerSelection.direction);
+        }
+      }
+    }
   }
 }
 

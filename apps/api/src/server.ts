@@ -1,10 +1,11 @@
-import Fastify from "fastify"
+import Fastify, { type FastifyRequest } from "fastify"
 import cors from "@fastify/cors"
 import {
   conversationParamsSchema,
   conversationQuerySchema,
   createConversationSchema,
   createLeadSchema,
+  createTenantSchema,
   createMessageSchema,
   leadParamsSchema,
   leadQuerySchema,
@@ -12,6 +13,7 @@ import {
   tenantQuerySchema,
   updateLeadSchema,
   updateAiRuntimeSchema,
+  updateTenantSchema,
 } from "@scout/schemas"
 import { handleGuidedIntakeTurn } from "./lib/intake-flow.js"
 import { generateScoutTurn } from "./lib/scout-ai.js"
@@ -22,6 +24,7 @@ import {
   buildConversationAnalytics,
   createConversationRecord,
   createLeadRecord,
+  createTenant,
   ensureSeedData,
   getAiRuntimeConfig,
   getConversationDetailOrThrow,
@@ -35,6 +38,7 @@ import {
   updateAiRuntimeConfig,
   updateLeadRecord,
   updateConversation,
+  updateTenant,
 } from "./lib/store.js"
 
 const app = Fastify({
@@ -55,6 +59,106 @@ function buildSummaryDeliveryFailureMessage(input: {
   return "I saved that contact, but I couldn't send the summary just yet. I can still keep helping here in chat while we try again."
 }
 
+function getFirstHeaderValue(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value[0]
+  }
+
+  return value
+}
+
+function normalizeDomainValue(value: string) {
+  const trimmed = value.trim().toLowerCase()
+
+  if (!trimmed || trimmed === "null") {
+    return null
+  }
+
+  try {
+    const candidate = trimmed.includes("://") ? trimmed : `https://${trimmed}`
+    return new URL(candidate).hostname.toLowerCase()
+  } catch {
+    return trimmed
+      .replace(/^https?:\/\//, "")
+      .replace(/\/.*$/, "")
+      .replace(/:\d+$/, "")
+  }
+}
+
+function getRequestHostname(request: FastifyRequest) {
+  const origin = getFirstHeaderValue(request.headers.origin)
+  const referer = getFirstHeaderValue(request.headers.referer)
+
+  for (const candidate of [origin, referer]) {
+    if (!candidate) {
+      continue
+    }
+
+    const normalized = normalizeDomainValue(candidate)
+
+    if (normalized) {
+      return normalized
+    }
+  }
+
+  return undefined
+}
+
+function isAllowedDomain(hostname: string, allowedDomains: string[]) {
+  const normalizedHostname = normalizeDomainValue(hostname)
+
+  if (!normalizedHostname) {
+    return false
+  }
+
+  return allowedDomains.some((entry) => {
+    const normalizedEntry = normalizeDomainValue(entry)
+
+    if (!normalizedEntry) {
+      return false
+    }
+
+    if (normalizedEntry.startsWith("*.")) {
+      const baseDomain = normalizedEntry.slice(2)
+      return (
+        normalizedHostname === baseDomain ||
+        normalizedHostname.endsWith(`.${baseDomain}`)
+      )
+    }
+
+    return normalizedHostname === normalizedEntry
+  })
+}
+
+function getWidgetAccessError(input: {
+  request: FastifyRequest
+  tenant: {
+    brandName: string
+    widgetEnabled: boolean
+    allowedDomains: string[]
+  }
+}) {
+  if (!input.tenant.widgetEnabled) {
+    return `${input.tenant.brandName} has disabled the Scout widget right now.`
+  }
+
+  if (!input.tenant.allowedDomains.length) {
+    return null
+  }
+
+  const hostname = getRequestHostname(input.request)
+
+  if (!hostname) {
+    return "This widget request is missing a valid website origin."
+  }
+
+  if (!isAllowedDomain(hostname, input.tenant.allowedDomains)) {
+    return `This widget is not authorized for ${hostname}.`
+  }
+
+  return null
+}
+
 app.get("/health", async () => {
   return {
     status: "ok",
@@ -72,6 +176,19 @@ app.get("/v1/tenants/:tenantId", async (request) => {
   return getTenantOrThrow(tenantId)
 })
 
+app.post("/v1/tenants", async (request, reply) => {
+  const payload = createTenantSchema.parse(request.body)
+  const tenant = await createTenant(payload)
+  reply.code(201)
+  return tenant
+})
+
+app.patch("/v1/tenants/:tenantId", async (request) => {
+  const { tenantId } = tenantParamsSchema.parse(request.params)
+  const payload = updateTenantSchema.parse(request.body)
+  return updateTenant(tenantId, payload)
+})
+
 app.get("/v1/settings/ai-runtime", async () => {
   return getAiRuntimeConfig()
 })
@@ -84,6 +201,21 @@ app.patch("/v1/settings/ai-runtime", async (request) => {
 app.post("/v1/conversations", async (request, reply) => {
   const payload = createConversationSchema.parse(request.body)
   const tenant = await getTenantOrThrow(payload.tenantId)
+
+  if (payload.source === "widget") {
+    const widgetAccessError = getWidgetAccessError({
+      request,
+      tenant,
+    })
+
+    if (widgetAccessError) {
+      reply.code(403)
+      return {
+        error: widgetAccessError,
+      }
+    }
+  }
+
   const runtimeConfig = await getAiRuntimeConfig()
   const conversation = await createConversationRecord({
     ...payload,
@@ -117,7 +249,7 @@ app.get("/v1/conversations", async (request) => {
   return listConversations(filters)
 })
 
-app.post("/v1/chat/messages", async (request) => {
+app.post("/v1/chat/messages", async (request, reply) => {
   const payload = createMessageSchema.parse(request.body)
   const conversation = await getConversationOrThrow(payload.conversationId)
 
@@ -125,14 +257,28 @@ app.post("/v1/chat/messages", async (request) => {
     throw new Error("Conversation tenant mismatch")
   }
 
+  const tenant = await getTenantOrThrow(payload.tenantId)
+
+  if (conversation.source === "widget") {
+    const widgetAccessError = getWidgetAccessError({
+      request,
+      tenant,
+    })
+
+    if (widgetAccessError) {
+      reply.code(403)
+      return {
+        error: widgetAccessError,
+      }
+    }
+  }
+
   await appendMessage({
     conversationId: payload.conversationId,
     role: "user",
     content: payload.message,
   })
-
   const conversationMessages = await getConversationMessages(payload.conversationId)
-  const tenant = await getTenantOrThrow(payload.tenantId)
   const runtimeConfig =
     conversation.aiProviderUsed && conversation.aiModelUsed
       ? {
@@ -258,6 +404,22 @@ app.post("/v1/leads", async (request, reply) => {
 
   if (conversation.tenantId !== payload.tenantId) {
     throw new Error("Lead tenant mismatch")
+  }
+
+  const tenant = await getTenantOrThrow(payload.tenantId)
+
+  if (conversation.source === "widget") {
+    const widgetAccessError = getWidgetAccessError({
+      request,
+      tenant,
+    })
+
+    if (widgetAccessError) {
+      reply.code(403)
+      return {
+        error: widgetAccessError,
+      }
+    }
   }
 
   const lead = await createLeadRecord(payload)

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { requireDashboardSession } from "@/lib/auth"
 import { getConversationAnalytics } from "@/lib/scout-api"
+import { getDashboardTenantId } from "@/lib/tenant-selection"
 import type { ConversationStatus, SeverityLevel } from "@scout/types"
 
 function formatStatusLabel(status: ConversationStatus) {
@@ -16,8 +17,9 @@ function formatSeverityLabel(severity: SeverityLevel) {
 
 export default async function AnalyticsPage() {
   await requireDashboardSession()
+  const tenantId = await getDashboardTenantId()
 
-  const analytics = await getConversationAnalytics()
+  const analytics = await getConversationAnalytics(tenantId)
 
   return (
     <main className="min-h-screen px-6 py-10 md:px-10">
@@ -34,19 +36,8 @@ export default async function AnalyticsPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Link
-                href="/"
-                className="rounded-full border border-[#d7e0e3] bg-white px-4 py-2 text-sm font-medium text-[#132226] transition hover:border-[#b9c8cc]"
-              >
-                Back to overview
-              </Link>
-              <Link
-                href="/conversations"
-                className="rounded-full border border-[#d7e0e3] bg-white px-4 py-2 text-sm font-medium text-[#132226] transition hover:border-[#b9c8cc]"
-              >
-                Open conversations
-              </Link>
+            <div className="rounded-full border border-[#d7e0e3] bg-white px-4 py-2 text-sm font-medium text-[#5f7176]">
+              Sidebar navigation enabled
             </div>
           </div>
         </section>
