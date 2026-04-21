@@ -47,6 +47,11 @@ const tenantIdSchema = z
 const tenantSettingsSchema = z.object({
   companyName: z.string().trim().min(1),
   brandName: z.string().trim().min(1),
+  widgetAccentColor: z
+    .string()
+    .trim()
+    .regex(/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i, "Widget accent color must be a valid hex color.")
+    .optional(),
   allowedDomains: z.array(z.string().trim().min(1)),
   serviceAreas: z.array(z.string().trim().min(1)),
   supportEmail: z.string().trim().email(),

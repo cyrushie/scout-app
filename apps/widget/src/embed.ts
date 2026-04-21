@@ -6,7 +6,11 @@ import type {
   TenantConfig,
 } from "@scout/types";
 
-type WidgetPosition = "bottom-right" | "bottom-left";
+type WidgetPosition =
+  | "bottom-right"
+  | "bottom-left"
+  | "top-right"
+  | "top-left";
 
 interface WidgetOptions {
   tenantId: string;
@@ -62,6 +66,11 @@ const LEAD_CAPTURE_STATES = new Set([
 const styles = `
   :host {
     all: initial;
+    --accent: #111111;
+    --accent-soft: color-mix(in srgb, var(--accent) 9%, white);
+    --accent-muted: color-mix(in srgb, var(--accent) 18%, white);
+    --accent-border: color-mix(in srgb, var(--accent) 22%, white);
+    --accent-ink: color-mix(in srgb, var(--accent) 78%, black 22%);
   }
 
   .scout-shell {
@@ -76,15 +85,23 @@ const styles = `
     inset: auto auto 24px 24px;
   }
 
+  .scout-shell[data-position="top-right"] {
+    inset: 24px 24px auto auto;
+  }
+
+  .scout-shell[data-position="top-left"] {
+    inset: 24px auto auto 24px;
+  }
+
   .launcher {
     display: inline-flex;
     align-items: center;
     gap: 10px;
     min-width: 0;
-    border: 1px solid rgba(17, 17, 17, 0.12);
+    border: 1px solid var(--accent-border);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.96);
-    color: #111111;
+    color: var(--accent-ink);
     cursor: pointer;
     padding: 10px 14px 10px 10px;
     box-shadow: 0 18px 48px rgba(17, 17, 17, 0.12);
@@ -98,7 +115,7 @@ const styles = `
 
   .launcher:hover {
     transform: translateY(-1px);
-    border-color: rgba(17, 17, 17, 0.2);
+    border-color: color-mix(in srgb, var(--accent) 28%, white);
     box-shadow: 0 20px 54px rgba(17, 17, 17, 0.16);
   }
 
@@ -109,7 +126,7 @@ const styles = `
     align-items: center;
     justify-content: center;
     border-radius: 999px;
-    background: #111111;
+    background: var(--accent);
     color: white;
     flex: 0 0 auto;
   }
@@ -125,7 +142,7 @@ const styles = `
     font-size: 13px;
     font-weight: 700;
     line-height: 1.1;
-    color: #111111;
+    color: var(--accent-ink);
   }
 
   .launcher-hint {
@@ -140,7 +157,7 @@ const styles = `
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid rgba(17, 17, 17, 0.1);
+    border: 1px solid var(--accent-border);
     border-radius: 24px;
     background: rgba(255, 255, 255, 0.98);
     box-shadow: 0 28px 90px rgba(17, 17, 17, 0.14);
@@ -149,8 +166,8 @@ const styles = `
 
   .header {
     padding: 16px 16px 14px;
-    background: #ffffff;
-    border-bottom: 1px solid rgba(17, 17, 17, 0.08);
+    background: linear-gradient(180deg, var(--accent-soft) 0%, #ffffff 72%);
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 12%, white);
   }
 
   .eyebrow {
@@ -169,7 +186,7 @@ const styles = `
     line-height: 1.2;
     font-weight: 700;
     margin: 0;
-    color: #111111;
+    color: var(--accent-ink);
   }
 
   .subtitle {
@@ -180,9 +197,9 @@ const styles = `
   }
 
   .close-button {
-    border: 1px solid rgba(17, 17, 17, 0.08);
-    background: #fafafa;
-    color: #111111;
+    border: 1px solid color-mix(in srgb, var(--accent) 12%, white);
+    background: rgba(255, 255, 255, 0.86);
+    color: var(--accent-ink);
     width: 32px;
     height: 32px;
     border-radius: 999px;
@@ -195,8 +212,8 @@ const styles = `
     margin-top: 10px;
     padding: 10px 12px;
     border-radius: 16px;
-    background: #fafafa;
-    border: 1px solid rgba(17, 17, 17, 0.06);
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 14%, white);
   }
 
   .assessment-top {
@@ -210,7 +227,7 @@ const styles = `
     display: inline-flex;
     align-items: center;
     border-radius: 999px;
-    background: #111111;
+    background: var(--accent);
     color: #ffffff;
     padding: 5px 9px;
     font-size: 11px;
@@ -221,7 +238,7 @@ const styles = `
   .assessment-meta {
     font-size: 12px;
     font-weight: 700;
-    color: #111111;
+    color: var(--accent-ink);
   }
 
   .assessment-copy {
@@ -247,9 +264,9 @@ const styles = `
   }
 
   .section-toggle {
-    border: 1px solid rgba(17, 17, 17, 0.08);
+    border: 1px solid color-mix(in srgb, var(--accent) 12%, white);
     background: #ffffff;
-    color: #111111;
+    color: var(--accent-ink);
     border-radius: 999px;
     padding: 5px 9px;
     font: inherit;
@@ -286,7 +303,7 @@ const styles = `
 
   .message.user {
     margin-left: auto;
-    background: #111111;
+    background: var(--accent);
     color: #ffffff;
   }
 
@@ -354,6 +371,14 @@ const styles = `
     border-radius: 16px;
   }
 
+  .composer textarea:focus,
+  .lead-form input:focus,
+  .lead-form textarea:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--accent) 38%, white);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, white);
+  }
+
   .composer textarea {
     min-height: 74px;
     padding: 11px 13px;
@@ -385,7 +410,7 @@ const styles = `
   }
 
   .button.primary {
-    background: #111111;
+    background: var(--accent);
     color: white;
   }
 
@@ -404,14 +429,14 @@ const styles = `
     margin: 0 14px 12px;
     padding: 12px;
     border-radius: 16px;
-    background: #fafafa;
-    border: 1px solid rgba(17, 17, 17, 0.08);
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 12%, white);
   }
 
   .lead-card h3 {
     margin: 0;
     font-size: 13px;
-    color: #111111;
+    color: var(--accent-ink);
   }
 
   .lead-card p {
@@ -463,8 +488,8 @@ const styles = `
     margin: 0 14px 12px;
     padding: 12px;
     border-radius: 16px;
-    background: #f5f5f5;
-    color: #111111;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
     font-size: 12px;
     line-height: 1.5;
   }
@@ -473,8 +498,8 @@ const styles = `
     margin: 0 14px 12px;
     padding: 10px 12px;
     border-radius: 16px;
-    background: #fafafa;
-    border: 1px solid rgba(17, 17, 17, 0.08);
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 12%, white);
   }
 
   .collapsed-card-row {
@@ -501,7 +526,7 @@ const styles = `
 
   .collapsed-card-text {
     font-size: 12px;
-    color: #111111;
+    color: var(--accent-ink);
     line-height: 1.4;
   }
 
@@ -715,7 +740,11 @@ class ScoutWidgetElement extends HTMLElement {
   }
 
   private get accentColor() {
-    return this.getAttribute("accent-color") ?? DEFAULT_ACCENT;
+    return (
+      this.getAttribute("accent-color") ??
+      this.tenant?.widgetAccentColor ??
+      DEFAULT_ACCENT
+    );
   }
 
   private get widgetTitle() {

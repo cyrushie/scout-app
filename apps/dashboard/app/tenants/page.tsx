@@ -87,6 +87,19 @@ export default async function TenantsPage() {
                     </div>
 
                     <div className="mt-4 rounded-[16px] bg-white p-4">
+                      <p className="text-xs uppercase tracking-[0.12em] text-[#7b8b90]">Widget accent</p>
+                      <div className="mt-2 flex items-center gap-3">
+                        <span
+                          className="h-4 w-4 rounded-full border border-black/10"
+                          style={{ backgroundColor: tenant.widgetAccentColor ?? "#111111" }}
+                        />
+                        <p className="text-sm leading-6 text-[#132226]">
+                          {tenant.widgetAccentColor ?? "Default Scout black"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 rounded-[16px] bg-white p-4">
                       <p className="text-xs uppercase tracking-[0.12em] text-[#7b8b90]">Assistant voice</p>
                       <p className="mt-2 text-sm leading-6 text-[#132226]">{tenant.assistantVoice}</p>
                     </div>
@@ -171,6 +184,18 @@ export default async function TenantsPage() {
                   placeholder="ops@acmepest.com"
                   className="w-full rounded-[18px] border border-[#d7e0e3] bg-[#fbfcfc] px-4 py-3 text-sm text-[#132226] outline-none transition focus:border-[#1d8f6a]"
                 />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-[#132226]">Widget accent color</span>
+                <input
+                  name="widgetAccentColor"
+                  placeholder="#1d8f6a"
+                  className="w-full rounded-[18px] border border-[#d7e0e3] bg-[#fbfcfc] px-4 py-3 font-mono text-sm text-[#132226] outline-none transition focus:border-[#1d8f6a]"
+                />
+                <p className="mt-2 text-xs leading-5 text-[#7b8b90]">
+                  Optional hex color for the widget, like <code>#1d8f6a</code>. Leave blank to use the default Scout theme.
+                </p>
               </label>
 
               <label className="block">

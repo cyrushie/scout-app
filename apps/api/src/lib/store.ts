@@ -24,6 +24,7 @@ const seededTenants: TenantConfig[] = [
     id: "scout-direct",
     companyName: "Scout Direct",
     brandName: "Scout",
+    widgetAccentColor: "#111111",
     allowedDomains: ["localhost", "scoutai.app"],
     serviceAreas: ["Florida", "Texas", "Arizona"],
     supportEmail: "support@scoutai.app",
@@ -35,6 +36,7 @@ const seededTenants: TenantConfig[] = [
     id: "sunrise-pest",
     companyName: "Sunrise Pest Control",
     brandName: "Sunrise Pest",
+    widgetAccentColor: "#1d8f6a",
     allowedDomains: ["sunrisepest.example"],
     serviceAreas: ["Florida"],
     supportEmail: "ops@sunrisepest.example",
@@ -54,6 +56,7 @@ function toTenantConfig(tenant: {
   id: string
   companyName: string
   brandName: string
+  widgetAccentColor: string | null
   allowedDomains: string[]
   serviceAreas: string[]
   supportEmail: string
@@ -65,6 +68,7 @@ function toTenantConfig(tenant: {
     id: tenant.id,
     companyName: tenant.companyName,
     brandName: tenant.brandName,
+    widgetAccentColor: tenant.widgetAccentColor ?? undefined,
     allowedDomains: tenant.allowedDomains,
     serviceAreas: tenant.serviceAreas,
     supportEmail: tenant.supportEmail,

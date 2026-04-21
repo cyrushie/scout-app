@@ -74,6 +74,7 @@ model Tenant {
   id             String         @id
   companyName    String
   brandName      String
+  widgetAccentColor String?
   allowedDomains String[]
   serviceAreas   String[]
   supportEmail   String

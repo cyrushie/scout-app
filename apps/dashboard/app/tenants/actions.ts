@@ -22,10 +22,16 @@ function normalizeTenantId(value: FormDataEntryValue | null) {
     .replace(/^-+|-+$/g, "")
 }
 
+function parseOptionalString(value: FormDataEntryValue | null) {
+  const normalized = String(value ?? "").trim()
+  return normalized.length ? normalized : undefined
+}
+
 function parseTenantSettings(formData: FormData) {
   return {
     companyName: String(formData.get("companyName") ?? "").trim(),
     brandName: String(formData.get("brandName") ?? "").trim(),
+    widgetAccentColor: parseOptionalString(formData.get("widgetAccentColor")),
     allowedDomains: parseListField(formData.get("allowedDomains")),
     serviceAreas: parseListField(formData.get("serviceAreas")),
     supportEmail: String(formData.get("supportEmail") ?? "").trim(),

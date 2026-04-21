@@ -35,6 +35,7 @@ export interface TenantConfig {
   id: string
   companyName: string
   brandName: string
+  widgetAccentColor?: string
   allowedDomains: string[]
   serviceAreas: string[]
   supportEmail: string
@@ -46,6 +47,7 @@ export interface TenantConfig {
 export interface TenantSettingsInput {
   companyName: string
   brandName: string
+  widgetAccentColor?: string
   allowedDomains: string[]
   serviceAreas: string[]
   supportEmail: string

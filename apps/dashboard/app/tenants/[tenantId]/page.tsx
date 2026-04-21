@@ -106,6 +106,25 @@ export default async function TenantDetailPage({
                 />
               </label>
 
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-[#132226]">Widget accent color</span>
+                <div className="flex items-center gap-3">
+                  <span
+                    className="h-11 w-11 rounded-2xl border border-black/10"
+                    style={{ backgroundColor: tenant.widgetAccentColor ?? "#111111" }}
+                  />
+                  <input
+                    name="widgetAccentColor"
+                    defaultValue={tenant.widgetAccentColor ?? ""}
+                    placeholder="#1d8f6a"
+                    className="w-full rounded-[18px] border border-[#d7e0e3] bg-[#fbfcfc] px-4 py-3 font-mono text-sm text-[#132226] outline-none transition focus:border-[#1d8f6a]"
+                  />
+                </div>
+                <p className="mt-2 text-xs leading-5 text-[#7b8b90]">
+                  Optional hex color for launcher, buttons, badges, and chat accents. Leave blank to use the default Scout black.
+                </p>
+              </label>
+
               <div className="grid gap-4 lg:grid-cols-2">
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-[#132226]">Allowed domains</span>
@@ -199,6 +218,18 @@ export default async function TenantDetailPage({
                 <div className="rounded-[18px] bg-[#fbfcfc] p-4">
                   <p className="text-xs uppercase tracking-[0.12em] text-[#7b8b90]">Support email</p>
                   <p className="mt-2 text-sm font-medium text-[#132226]">{tenant.supportEmail}</p>
+                </div>
+                <div className="rounded-[18px] bg-[#fbfcfc] p-4 sm:col-span-2">
+                  <p className="text-xs uppercase tracking-[0.12em] text-[#7b8b90]">Widget accent</p>
+                  <div className="mt-2 flex items-center gap-3">
+                    <span
+                      className="h-4 w-4 rounded-full border border-black/10"
+                      style={{ backgroundColor: tenant.widgetAccentColor ?? "#111111" }}
+                    />
+                    <p className="text-sm font-medium text-[#132226]">
+                      {tenant.widgetAccentColor ?? "Default Scout black"}
+                    </p>
+                  </div>
                 </div>
               </div>
 
